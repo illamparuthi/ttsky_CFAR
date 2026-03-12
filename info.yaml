@@ -14,7 +14,7 @@ project:
 
   source_files:
     - "project.v"
-    - "cfar_detector.v"
+    - "cfar.v"
 
 pinout:
   # Inputs
