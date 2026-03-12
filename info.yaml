@@ -9,13 +9,15 @@ project:
 
   tiles: "1x1"
 
-  # Must start with tt_um_
-  top_module:  "tt_um_ttsky_cfar"
+  # Top module name
+  top_module: "tt_um_ttsky_cfar"
 
+  # Source files
   source_files:
     - "project.v"
     - "cfar.v"
 
+# Pinout description
 pinout:
   # Inputs
   ui[0]: "Radar sample bit0"
@@ -28,7 +30,7 @@ pinout:
   ui[7]: "Radar sample bit7"
 
   # Outputs
-  uo[0]: "Target detection output"
+  uo[0]: "Detection output"
   uo[1]: ""
   uo[2]: ""
   uo[3]: ""
@@ -47,4 +49,5 @@ pinout:
   uio[6]: ""
   uio[7]: ""
 
+# Required version
 yaml_version: 6
