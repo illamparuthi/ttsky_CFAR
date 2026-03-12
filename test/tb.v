@@ -1,58 +1,52 @@
-`timescale 1ns/1ps
 `default_nettype none
+`timescale 1ns / 1ps
 
-module tb;
+/* TinyTapeout testbench
+ * Instantiates the DUT and exposes signals for cocotb.
+ */
 
-reg clk;
-reg rst_n;
-reg [7:0] sample;
-wire detect;
+module tb ();
 
-// Instantiate DUT
-cfar_detector dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .sample(sample),
-    .detect(detect)
-);
-
-// Clock generator (100 MHz)
-always #5 clk = ~clk;
-
-initial begin
-    $dumpfile("cfar_tb.vcd");
+  // Dump waveform
+  initial begin
+    $dumpfile("tb.fst");
     $dumpvars(0, tb);
+    #1;
+  end
 
-    clk = 0;
-    rst_n = 0;
-    sample = 0;
+  // Inputs
+  reg clk;
+  reg rst_n;
+  reg ena;
+  reg [7:0] ui_in;
+  reg [7:0] uio_in;
 
-    // Reset
-    #20;
-    rst_n = 1;
+  // Outputs
+  wire [7:0] uo_out;
+  wire [7:0] uio_out;
+  wire [7:0] uio_oe;
 
-    // Background noise samples
-    repeat(10) begin
-        @(posedge clk);
-        sample = 8'd10;
-    end
+`ifdef GL_TEST
+  wire VPWR = 1'b1;
+  wire VGND = 1'b0;
+`endif
 
-    // Slight variation noise
-    @(posedge clk); sample = 8'd11;
-    @(posedge clk); sample = 8'd9;
-    @(posedge clk); sample = 8'd10;
+  // Instantiate TinyTapeout wrapper
+  tt_um_ttsky_cfar user_project (
 
-    // Strong reflection (target)
-    @(posedge clk); sample = 8'd80;
+`ifdef GL_TEST
+      .VPWR(VPWR),
+      .VGND(VGND),
+`endif
 
-    // Return to noise
-    @(posedge clk); sample = 8'd11;
-    @(posedge clk); sample = 8'd10;
-
-    // Wait some cycles
-    repeat(10) @(posedge clk);
-
-    $finish;
-end
+      .ui_in  (ui_in),
+      .uo_out (uo_out),
+      .uio_in (uio_in),
+      .uio_out(uio_out),
+      .uio_oe (uio_oe),
+      .ena    (ena),
+      .clk    (clk),
+      .rst_n  (rst_n)
+  );
 
 endmodule
