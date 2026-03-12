@@ -1,0 +1,9 @@
+{
+  "DESIGN_NAME": "tt_um_ttsky_cfar",
+  "VERILOG_FILES": [
+    "project.v",
+    "cfar.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 100
+}
