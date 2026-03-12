@@ -49,8 +49,8 @@ end
 
 // Training cell sum
 wire [10:0] sum =
-      w0 + w1 + w2 + w3 +
-      w7 + w8 + w9 + w10;
+      {3'b0,w0} + {3'b0,w1} + {3'b0,w2} + {3'b0,w3} +
+      {3'b0,w7} + {3'b0,w8} + {3'b0,w9} + {3'b0,w10};
 
 // Noise estimate
 wire [7:0] avg = sum >> 3;
