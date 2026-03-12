@@ -6,35 +6,29 @@
 `default_nettype none
 
 module tt_um_ttsky_cfar (
-    input  wire [7:0] ui_in,    // Dedicated inputs (radar samples)
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path (unused)
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path
-    input  wire       ena,      // always 1 when powered
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset
+    input  wire [7:0] ui_in,
+    output wire [7:0] uo_out,
+    input  wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe,
+    input  wire       ena,
+    input  wire       clk,
+    input  wire       rst_n
 );
 
-    wire detect;
+wire detect;
 
-    // Instantiate CFAR core
-    cfar_detector cfar_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .sample(ui_in),
-        .detect(detect)
-    );
+cfar_detector core (
+    .clk(clk),
+    .rst_n(rst_n),
+    .sample(ui_in),
+    .detect(detect)
+);
 
-    // Output mapping
-    assign uo_out[0] = detect;
-    assign uo_out[7:1] = 7'b0;
+assign uo_out = {7'b0, detect};
+assign uio_out = 8'b0;
+assign uio_oe  = 8'b0;
 
-    // Unused bidirectional IOs
-    assign uio_out = 8'b0;
-    assign uio_oe  = 8'b0;
-
-    // Prevent unused signal warnings
-    wire _unused = &{ena, uio_in, 1'b0};
+wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule
