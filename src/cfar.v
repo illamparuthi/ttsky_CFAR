@@ -12,39 +12,53 @@ module cfar_detector (
     output reg        detect
 );
 
-    // Sliding window to store recent radar samples
-    reg [7:0] window [0:10];
-    integer i;
+reg [7:0] w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10;
 
-    // Shift register logic
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            for (i = 0; i < 11; i = i + 1) begin
-                window[i] <= 8'd0;
-            end
-        end else begin
-            for (i = 10; i > 0; i = i - 1) begin
-                window[i] <= window[i-1];
-            end
-            window[0] <= sample;
-        end
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n) begin
+        w0  <= 8'd0;
+        w1  <= 8'd0;
+        w2  <= 8'd0;
+        w3  <= 8'd0;
+        w4  <= 8'd0;
+        w5  <= 8'd0;
+        w6  <= 8'd0;
+        w7  <= 8'd0;
+        w8  <= 8'd0;
+        w9  <= 8'd0;
+        w10 <= 8'd0;
     end
-
-    // Cell Under Test (CUT)
-    wire [7:0] CUT = window[5];
-
-    // Sum of training cells (excluding guard cells and CUT)
-    wire [10:0] sum =
-          window[0] + window[1] + window[2] + window[3] +
-          window[7] + window[8] + window[9] + window[10];
-
-    // Noise average and threshold generation
-    wire [7:0] avg       = sum >> 3;   // divide by 8
-    wire [7:0] threshold = avg << 1;   // multiply by 2
-
-    // Detection logic
-    always @(posedge clk) begin
-        detect <= (CUT > threshold);
+    else begin
+        w10 <= w9;
+        w9  <= w8;
+        w8  <= w7;
+        w7  <= w6;
+        w6  <= w5;
+        w5  <= w4;
+        w4  <= w3;
+        w3  <= w2;
+        w2  <= w1;
+        w1  <= w0;
+        w0  <= sample;
     end
+end
+
+// Cell Under Test
+wire [7:0] CUT = w5;
+
+// Training cell sum
+wire [10:0] sum =
+      w0 + w1 + w2 + w3 +
+      w7 + w8 + w9 + w10;
+
+// Noise estimation
+wire [7:0] avg = sum >> 3;
+
+// Threshold
+wire [7:0] threshold = avg << 1;
+
+// Detection logic
+always @(posedge clk)
+    detect <= (CUT > threshold);
 
 endmodule
