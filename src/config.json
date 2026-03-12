@@ -15,5 +15,5 @@
   "CORE_AREA": "10 10 151 101",
 
   "RT_MAX_LAYER": "met4",
-  "PDN_CFG": "tt/def/tt_block_1x1_pg.tcl"
+  
 }
