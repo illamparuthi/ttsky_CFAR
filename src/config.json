@@ -9,14 +9,9 @@
 
   "FP_DEF_TEMPLATE": "tt/def/tt_block_1x1_pg.def",
 
-  "PL_TARGET_DENSITY": 0.55,
   "FP_SIZING": "absolute",
   "DIE_AREA": "0 0 161 111",
   "CORE_AREA": "10 10 151 101",
 
-  "RT_MAX_LAYER": "met4",
-
-  "GRT_LAYER_ADJUSTMENTS": {
-    "met5": 0
-  }
+  "RT_MAX_LAYER": "met4"
 }
