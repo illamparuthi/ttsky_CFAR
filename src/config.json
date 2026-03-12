@@ -14,5 +14,9 @@
   "DIE_AREA": "0 0 161 111",
   "CORE_AREA": "10 10 151 101",
 
-  "RT_MAX_LAYER": "met4"
+  "RT_MAX_LAYER": "met4",
+
+  "GRT_LAYER_ADJUSTMENTS": {
+    "met5": 0
+  }
 }
