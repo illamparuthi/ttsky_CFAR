@@ -1,10 +1,9 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-/* 
-   TinyTapeout testbench
-   Instantiates the user project and exposes signals for cocotb tests
-*/
+/* TinyTapeout testbench
+ * Only instantiates the DUT. cocotb test.py drives the signals.
+ */
 
 module tb ();
 
@@ -32,7 +31,7 @@ module tb ();
   wire VGND = 1'b0;
 `endif
 
-  // Instantiate your TinyTapeout wrapper
+  // Instantiate DUT
   tt_um_ttsky_cfar user_project (
 
 `ifdef GL_TEST
@@ -49,39 +48,5 @@ module tb ();
       .clk    (clk),
       .rst_n  (rst_n)
   );
-
-  // Clock generator
-  always #5 clk = ~clk;
-
-  initial begin
-    clk = 0;
-    rst_n = 0;
-    ena = 1;
-    ui_in = 0;
-    uio_in = 0;
-
-    // Reset
-    #20;
-    rst_n = 1;
-
-    // Noise samples
-    #10 ui_in = 8'd10;
-    #10 ui_in = 8'd11;
-    #10 ui_in = 8'd9;
-    #10 ui_in = 8'd10;
-    #10 ui_in = 8'd12;
-    #10 ui_in = 8'd11;
-    #10 ui_in = 8'd10;
-
-    // Strong reflection (target)
-    #10 ui_in = 8'd80;
-
-    // Back to noise
-    #10 ui_in = 8'd11;
-    #10 ui_in = 8'd10;
-
-    #100;
-    $finish;
-  end
 
 endmodule
