@@ -33,7 +33,7 @@ module tb ();
 `endif
 
   // Instantiate the user project
-  tt_um_cfar_detector user_project (
+  ttsky_CFAR user_project (
 
 `ifdef GL_TEST
       .VPWR(VPWR),
