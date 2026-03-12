@@ -2,6 +2,10 @@
  * Copyright (c) 2026 illamparuthi
  * SPDX-License-Identifier: Apache-2.0
  */
+/*
+ * Copyright (c) 2026 illamparuthi
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 `default_nettype none
 
@@ -29,6 +33,7 @@ assign uo_out = {7'b0, detect};
 assign uio_out = 8'b0;
 assign uio_oe  = 8'b0;
 
-wire _unused = &{ena, uio_in, 1'b0};
+/* keep ports from being optimized away */
+wire _unused = &{ena, clk, rst_n, uio_in, 1'b0};
 
 endmodule
