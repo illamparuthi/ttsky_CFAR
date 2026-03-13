@@ -1,7 +1,6 @@
-
 # Testbench for CFAR Tiny Tapeout Project
 
-This directory contains the simulation testbench for the **CFAR Radar Detector** Tiny Tapeout project.
+This directory contains the simulation testbench for the **CFAR Radar Detector with Audio Alert** Tiny Tapeout project.
 
 The testbench uses **cocotb** to drive the DUT (Device Under Test) and verify the outputs.
 
@@ -17,7 +16,7 @@ https://tinytapeout.com/hdl/testing/
 Example:
 
 ```
-PROJECT_SOURCES = project.v cfar.v
+PROJECT_SOURCES = project.v cfar.v buzzer.v
 ```
 
 2. In **tb.v**, replace the example module with your wrapper module:
@@ -117,7 +116,15 @@ When the value **80** reaches the **Cell Under Test (CUT)** position, the detect
 uo_out[0] = 1
 ```
 
-indicating a detected target.
+indicating a detected radar target.
+
+At the same time:
+
+```
+uo_out[1]
+```
+
+will generate a **buzzer signal** indicating detection.
 
 ---
 
@@ -126,10 +133,11 @@ indicating a detected target.
 ```
 src/
  ├── project.v        # TinyTapeout wrapper module
- └── cfar.v           # CFAR detector logic
+ ├── cfar.v           # CFAR detector logic
+ └── buzzer.v         # Buzzer / audio alert generator
 
 test/
- ├── tb.v             # Verilog testbench
- ├── Makefile         # simulation configuration
- └── test.py          # cocotb test script
+ ├── tb.v             # Verilog testbench wrapper
+ ├── tb.py            # cocotb test script
+ └── Makefile         # simulation configuration
 ```
