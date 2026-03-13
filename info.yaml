@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
-  title:        "CFAR Radar Detector"
+  title:        "CFAR Radar Detector with Audio Alert"
   author:       "Illamparuthi"
   discord:      ""
-  description:  "CA-CFAR radar detector for target detection using dynamic noise threshold"
+  description:  "CA-CFAR radar detector with buzzer feedback for target detection using adaptive noise threshold"
   language:     "Verilog"
   clock_hz:     10000000
 
@@ -12,13 +12,15 @@ project:
   # Top module name
   top_module: "tt_um_ttsky_cfar"
 
-  # Source files
+  # RTL source files
   source_files:
     - "project.v"
     - "cfar.v"
+    - "buzzer.v"
 
 # Pinout description
 pinout:
+
   # Inputs
   ui[0]: "Radar sample bit0"
   ui[1]: "Radar sample bit1"
@@ -31,7 +33,7 @@ pinout:
 
   # Outputs
   uo[0]: "CFAR detection output"
-  uo[1]: "unused"
+  uo[1]: "Buzzer output (audio alert)"
   uo[2]: "unused"
   uo[3]: "unused"
   uo[4]: "unused"
