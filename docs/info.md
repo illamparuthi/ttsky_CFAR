@@ -4,11 +4,13 @@ This project implements a **CA-CFAR (Cell Averaging Constant False Alarm Rate)**
 
 The CFAR algorithm detects strong reflections in radar signals by comparing a **Cell Under Test (CUT)** with a threshold calculated from surrounding noise samples.
 
-The design maintains a sliding window of 11 samples:
+The design maintains a sliding window of **11 samples**:
 
 Training Cells | Guard | CUT | Guard | Training Cells
 
-Training cells estimate the background noise level, while guard cells prevent the target signal from influencing the noise estimation.
+- **Training cells** estimate the background noise level.
+- **Guard cells** prevent the target signal from influencing the noise estimation.
+- **CUT (Cell Under Test)** is the sample currently being evaluated.
 
 The detector computes the threshold as:
 
@@ -22,7 +24,11 @@ Otherwise:
 
 detect = 0
 
-### Architecture
+When a target is detected, the design also activates a **buzzer signal** to provide an audible alert.
+
+---
+
+## Architecture
 
 Radar Sample Input  
 ↓  
@@ -36,8 +42,13 @@ Threshold Generator
 ↓  
 Comparator  
 ↓  
-Detection Output
+Detection Signal  
+↓  
+Buzzer Driver  
+↓  
+Audio Alert Output  
 
+---
 
 ## How to test
 
@@ -49,22 +60,32 @@ Detection Output
 
 The detector continuously shifts incoming samples through the sliding window and calculates the noise level.
 
-When a strong reflection enters the **Cell Under Test (CUT)** and exceeds the calculated threshold, the detection output is asserted.
+When a strong reflection enters the **Cell Under Test (CUT)** and exceeds the calculated threshold, the detection output is asserted and the buzzer signal is activated.
 
-Output:
+### Outputs
 
 - `uo_out[0] = 1` → target detected  
-- `uo_out[0] = 0` → no target detected
+- `uo_out[0] = 0` → no target detected  
+- `uo_out[1]` → buzzer output signal (audio alert)
 
-Example test input sequence:
+---
+
+### Example test input sequence
 
 10, 11, 9, 10, 12, 11, 10, 80, 11, 10
 
-When the value **80** reaches the CUT position, the detector should assert `uo_out[0] = 1`.
+When the value **80** reaches the CUT position, the detector asserts:
 
+uo_out[0] = 1
+
+and the **buzzer output (`uo_out[1]`) generates a tone** indicating detection.
+
+---
 
 ## External hardware
 
-No external hardware is required.
+Optional external hardware:
 
-The project operates entirely as a digital logic block and can be tested through simulation or when integrated into a TinyTapeout chip.
+- A **small buzzer or speaker** can be connected to `uo_out[1]` to generate an audible alert when a target is detected.
+
+The project can also be tested entirely through **simulation** or when integrated into a **TinyTapeout chip**.
