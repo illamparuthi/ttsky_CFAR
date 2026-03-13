@@ -1,28 +1,34 @@
+![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-  ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
-
-# CFAR Radar Detector – TinyTapeout Project
+# CFAR Radar Detector with Audio Alert – TinyTapeout Project
 
 ## Project Overview
 
-This project implements a **CA-CFAR (Cell Averaging Constant False Alarm Rate) detector** in Verilog for radar or Ground Penetrating Radar (GPR) signal processing.
+This project implements a **CA-CFAR (Cell Averaging Constant False Alarm Rate) radar detector** with an **audio alert output** using Verilog.
 
-CFAR is a widely used radar detection algorithm that determines whether a target exists by comparing a **Cell Under Test (CUT)** with a **threshold calculated from surrounding noise samples**.
+The system detects radar targets by comparing a **Cell Under Test (CUT)** with a **dynamic threshold derived from surrounding noise samples**.  
+When a target is detected, a **buzzer signal is generated** to provide an audio indication.
 
-If the signal strength of the CUT exceeds the calculated threshold, a detection signal is generated.
+This architecture can be used in:
+
+- Ground Penetrating Radar (GPR)
+- Automotive radar
+- Object detection systems
+- Embedded sensing devices
 
 ---
 
 ## CFAR Detection Concept
 
-The algorithm analyzes a sliding window of samples:
+The CFAR algorithm processes a sliding window of radar samples:
 
 ```
 Training Cells | Guard | CUT | Guard | Training Cells
 ```
 
-- **Training cells** estimate the background noise.
-- **Guard cells** prevent the target signal from affecting the noise calculation.
+- **Training cells** estimate the background noise level.
+- **Guard cells** prevent the target signal from affecting the noise estimate.
+- **CUT (Cell Under Test)** is the sample being evaluated.
 
 Detection rule:
 
@@ -30,24 +36,34 @@ Detection rule:
 CUT > Threshold → Target detected
 ```
 
----
-
-## Architecture
+The threshold is calculated dynamically:
 
 ```
-Radar Sample
-     ↓
-Sliding Window Register
-     ↓
+threshold = 2 × average_noise
+```
+
+---
+
+## System Architecture
+
+```
+Radar Sample Input
+        ↓
+Sliding Window Registers
+        ↓
 Noise Estimation (Adder Tree)
-     ↓
+        ↓
 Average Calculation
-     ↓
+        ↓
 Threshold Generator
-     ↓
+        ↓
 Comparator
-     ↓
-Detection Output
+        ↓
+Detection Signal
+        ↓
+Buzzer Controller
+        ↓
+Audio Alert Output
 ```
 
 ---
@@ -57,13 +73,15 @@ Detection Output
 ```
 src/
  ├── project.v          # TinyTapeout wrapper module
- └── cfar_detector.v    # CFAR detection logic
+ ├── cfar.v             # CFAR detection logic
+ └── buzzer.v           # Audio alert generator
 
 test/
- └── tb.v               # simulation testbench
+ ├── tb.v               # Verilog testbench
+ └── tb.py              # Cocotb simulation test
 
 docs/
- └── info.md            # project documentation
+ └── info.md            # Project documentation
 ```
 
 ---
@@ -73,7 +91,8 @@ docs/
 | Signal | Description |
 |------|-------------|
 | `ui_in[7:0]` | Radar input samples |
-| `uo_out[0]` | Detection output |
+| `uo_out[0]` | CFAR detection output |
+| `uo_out[1]` | Buzzer output signal |
 | `clk` | System clock |
 | `rst_n` | Active-low reset |
 
@@ -81,37 +100,36 @@ docs/
 
 ## Detection Logic
 
-The detector calculates the average noise level from surrounding training cells and generates a threshold.
+The detector calculates the average noise level from surrounding training cells and generates a dynamic threshold.
 
 ```
 threshold = 2 × average_noise
 ```
 
-If:
+Detection condition:
 
 ```
-CUT > threshold
+if (CUT > threshold)
+    detect = 1
+else
+    detect = 0
 ```
 
-Then:
-
-```
-detect = 1
-```
+When detection occurs, the buzzer module generates a square-wave tone.
 
 ---
 
 ## Simulation
 
-You can simulate the design using **Icarus Verilog**.
+The design can be simulated using **Icarus Verilog**.
 
-Compile:
+Compile the design:
 
 ```
 iverilog -o sim src/*.v test/tb.v
 ```
 
-Run:
+Run the simulation:
 
 ```
 vvp sim
@@ -127,9 +145,10 @@ gtkwave tb.fst
 
 ## What is Tiny Tapeout?
 
-Tiny Tapeout is an educational project that allows designers to fabricate digital circuits on real silicon using open-source tools.
+Tiny Tapeout is an educational initiative that allows designers to fabricate digital circuits on real silicon using open-source tools.
 
-Learn more:  
+Learn more:
+
 https://tinytapeout.com
 
 ---
@@ -142,4 +161,4 @@ Illamparuthi
 
 ## License
 
-Licensed under **Apache-2.0 License**.
+Licensed under the **Apache-2.0 License**.
