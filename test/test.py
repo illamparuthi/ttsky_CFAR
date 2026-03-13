@@ -22,7 +22,7 @@ async def test_project(dut):
     dut.rst_n.value = 1
 
     # radar samples
-    samples = [10,11,9,10,12,11,10,80,11,10]
+    samples = [10,11,9,10,12,11,10,200,11,10]
 
     detected = False
 
