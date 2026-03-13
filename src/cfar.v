@@ -44,6 +44,6 @@ wire [10:0] sum =
       {3'b0,w7}+{3'b0,w8}+{3'b0,w9}+{3'b0,w10};
 
 wire [7:0] avg = sum >> 3;
-wire [7:0] threshold = avg << 1;
+wire [7:0] threshold = avg + avg[7:1]; 
 
 endmodule
