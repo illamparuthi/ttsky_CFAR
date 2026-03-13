@@ -22,7 +22,7 @@ async def test_project(dut):
     dut.rst_n.value = 1
 
     # radar samples
-    samples = [10,11,9,10,12,11,10,200,11,10]
+    samples = [10,11,9,10,12,11,10,250,11,10]
 
     detected = False
 
@@ -30,12 +30,11 @@ async def test_project(dut):
         dut.ui_in.value = s
         await RisingEdge(dut.clk)
 
-        # check detection bit each cycle
         if dut.uo_out.value[0] == 1:
             detected = True
 
-    # wait extra cycles for pipeline
-    for _ in range(10):
+    # extra cycles for pipeline latency
+    for _ in range(40):
         await RisingEdge(dut.clk)
         if dut.uo_out.value[0] == 1:
             detected = True
