@@ -29,8 +29,8 @@ COMPILE_ARGS    += -DUNIT_DELAY=\#1
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
 
-# TinyTapeout CI provides the gate-level netlist via this env variable
-VERILOG_SOURCES += $(GL_NETLIST)
+# CI copies the netlist to this exact path (cp tt_submission/*.v test/gate_level_netlist.v)
+VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 TOPLEVEL         = tt_um_ttsky_cfar
 
