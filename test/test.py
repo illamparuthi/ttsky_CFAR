@@ -12,61 +12,60 @@ def safe_bit(signal, bit):
         return 0
 
 
-@cocotb.test()
-async def test_cfar_target_detected(dut):
-    """Fill window with low noise, then spike — detect bit must go high."""
-
-    clock = Clock(dut.clk, 10, units="ns")
-    cocotb.start_soon(clock.start())
-
-    dut.ena.value   = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value  = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-
-    # Prime all 11 window cells with low noise
-    for _ in range(32):
-        dut.ui_in.value = 10
+async def prime_window(dut, value=8, cycles=32):
+    """Fill the CFAR training window with a uniform noise value."""
+    for _ in range(cycles):
+        dut.ui_in.value = value
         await RisingEdge(dut.clk)
 
-    # Strong target spike — threshold = 2*10 = 20, spike = 200 >> 20
-    dut.ui_in.value = 200
-    await RisingEdge(dut.clk)
 
-    detected = False
-    for _ in range(20):
-        await RisingEdge(dut.clk)
-        if safe_bit(dut.uo_out, 0) == 1:
-            detected = True
-            break
-
-    assert detected, f"CFAR did not detect target spike (uo_out={dut.uo_out.value})"
-
-
-@cocotb.test()
-async def test_cfar_no_false_alarm(dut):
-    """Uniform noise — detect must stay low once window is fully primed."""
-
-    clock = Clock(dut.clk, 10, units="ns")
-    cocotb.start_soon(clock.start())
-
+async def reset_dut(dut):
+    """Standard reset sequence."""
     dut.ena.value    = 1
     dut.ui_in.value  = 0
     dut.uio_in.value = 0
     dut.rst_n.value  = 0
     await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
+    dut.rst_n.value  = 1
     await ClockCycles(dut.clk, 5)
 
-    # Prime window
-    for _ in range(32):
-        dut.ui_in.value = 10
+
+@cocotb.test()
+async def test_cfar_target_detected(dut):
+    """Prime window with noise=10, send spike=200 for 6 cycles, then noise.
+    Spike sits at CUT (w5) after 5 shift cycles → detect must fire."""
+
+    clock = Clock(dut.clk, 10, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+    await prime_window(dut, value=10, cycles=32)
+
+    # Send spike for 6 cycles then back to noise
+    # (spike enters w0 at cycle 0, reaches w5/CUT at cycle 5-6)
+    for _ in range(6):
+        dut.ui_in.value = 200
         await RisingEdge(dut.clk)
 
-    # Check: uniform input must NOT trigger detection
+    detected = False
+    for _ in range(20):
+        dut.ui_in.value = 10
+        await RisingEdge(dut.clk)
+        if safe_bit(dut.uo_out, 0) == 1:
+            detected = True
+            break
+
+    assert detected, "CFAR did not detect spike (uo_out[0] never went high)"
+
+
+@cocotb.test()
+async def test_cfar_no_false_alarm(dut):
+    """Uniform noise throughout — detect must stay low."""
+
+    clock = Clock(dut.clk, 10, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+    await prime_window(dut, value=10, cycles=32)
+
     false_alarm = False
     for _ in range(32):
         dut.ui_in.value = 10
@@ -79,31 +78,26 @@ async def test_cfar_no_false_alarm(dut):
 
 @cocotb.test()
 async def test_buzzer_activates(dut):
-    """Buzzer bit (uo_out[1]) must toggle when detect is sustained.
-    With fixed buzzer.v limit=500 cycles, it toggles within 600 cycles.
-    """
+    """Send spike so CFAR detect fires, then buzzer latches and plays tone.
+    Buzzer holds for HOLD_CYCLES=2000, toggling every half_period cycles.
+    With strength~8 (low noise avg), half_period=1000 → first toggle at ~1000.
+    We wait 3000 cycles total — enough for multiple toggles."""
 
     clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+    await prime_window(dut, value=8, cycles=32)
 
-    dut.ena.value    = 1
-    dut.ui_in.value  = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value  = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-
-    # Prime window with low noise
-    for _ in range(32):
-        dut.ui_in.value = 8
+    # Send spike burst — triggers detect for ~4 cycles
+    # buzzer latches and holds tone for 2000 cycles
+    for _ in range(6):
+        dut.ui_in.value = 200
         await RisingEdge(dut.clk)
 
-    # Sustain large spike — keeps detect=1 so buzzer counter keeps running
-    # With strength=avg=8, limit=1667 → buzzer toggles after 1667 cycles
+    # Back to noise — buzzer should still be playing due to hold latch
     buzzer_seen = False
-    for _ in range(5000):
-        dut.ui_in.value = 200
+    for _ in range(3000):
+        dut.ui_in.value = 8
         await RisingEdge(dut.clk)
         if safe_bit(dut.uo_out, 1) == 1:
             buzzer_seen = True
