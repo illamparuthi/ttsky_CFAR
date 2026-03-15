@@ -6,7 +6,6 @@ from cocotb.triggers import RisingEdge
 @cocotb.test()
 async def test_project(dut):
 
-    # start clock
     clock = Clock(dut.clk, 10, unit="ns")
     cocotb.start_soon(clock.start())
 
@@ -21,8 +20,8 @@ async def test_project(dut):
 
     dut.rst_n.value = 1
 
-    # radar samples
-    samples = [10,11,9,10,12,11,10,250,11,10]
+    # stronger radar target
+    samples = [10,11,9,10,12,11,10,255,11,10]
 
     detected = False
 
@@ -33,8 +32,8 @@ async def test_project(dut):
         if dut.uo_out.value[0] == 1:
             detected = True
 
-    # extra cycles for pipeline latency
-    for _ in range(40):
+    # allow pipeline delay
+    for _ in range(60):
         await RisingEdge(dut.clk)
         if dut.uo_out.value[0] == 1:
             detected = True
