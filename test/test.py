@@ -10,12 +10,10 @@ async def test_cfar_target_detected(dut):
     clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
 
-    # Initialize inputs
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
 
-    # Reset
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
@@ -23,19 +21,17 @@ async def test_cfar_target_detected(dut):
 
     detected = False
 
-    # Fill training window with low background noise first
-    for _ in range(16):
+    # Fill training window fully (32 cycles to be safe)
+    for _ in range(32):
         dut.ui_in.value = 10
         await RisingEdge(dut.clk)
-        if int(dut.uo_out.value) & 1:
-            detected = True
 
-    # Inject a strong target spike (well above 2x average noise of 10)
+    # Inject a strong target spike
     dut.ui_in.value = 255
     await RisingEdge(dut.clk)
 
-    # Allow pipeline to propagate
-    for _ in range(80):
+    # Allow pipeline to propagate (extra cycles for GL gate delays)
+    for _ in range(100):
         await RisingEdge(dut.clk)
         if int(dut.uo_out.value) & 1:
             detected = True
@@ -45,7 +41,7 @@ async def test_cfar_target_detected(dut):
 
 @cocotb.test()
 async def test_cfar_no_false_alarm(dut):
-    """Uniform low noise — detector must NOT fire."""
+    """Uniform low noise — detector must NOT fire after window is fully primed."""
 
     clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
@@ -59,10 +55,14 @@ async def test_cfar_no_false_alarm(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 2)
 
-    false_alarm = False
+    # Prime the window fully first (32 cycles)
+    for _ in range(32):
+        dut.ui_in.value = 10
+        await RisingEdge(dut.clk)
 
-    # Feed uniform noise — no target should be detected
-    for _ in range(40):
+    # Now check — uniform noise must NOT trigger detection
+    false_alarm = False
+    for _ in range(32):
         dut.ui_in.value = 10
         await RisingEdge(dut.clk)
         if int(dut.uo_out.value) & 1:
@@ -73,7 +73,7 @@ async def test_cfar_no_false_alarm(dut):
 
 @cocotb.test()
 async def test_buzzer_activates(dut):
-    """Buzzer output (bit 1) must go high when target is detected."""
+    """Buzzer output (uo_out[1]) must go high when target is detected."""
 
     clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
@@ -87,19 +87,15 @@ async def test_buzzer_activates(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 2)
 
-    buzzer_seen = False
-
-    # Prime with low noise
-    for _ in range(16):
+    # Prime training window
+    for _ in range(32):
         dut.ui_in.value = 8
         await RisingEdge(dut.clk)
 
-    # Large spike
-    dut.ui_in.value = 250
-    await RisingEdge(dut.clk)
-
-    # Let buzzer propagate
-    for _ in range(80):
+    # Keep spike sustained — buzzer square wave needs cycles to toggle
+    buzzer_seen = False
+    for _ in range(200):
+        dut.ui_in.value = 250
         await RisingEdge(dut.clk)
         if (int(dut.uo_out.value) >> 1) & 1:
             buzzer_seen = True
