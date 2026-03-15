@@ -24,9 +24,17 @@ tt_um_ttsky_cfar dut(
     .rst_n(rst_n)
 );
 
+// Clock generation
 initial begin
     clk = 0;
     forever #5 clk = ~clk;
+end
+
+// Waveform dump — required by TinyTapeout CI
+initial begin
+    $dumpfile("tb.fst");
+    $dumpvars(0, tb);
+    #1;
 end
 
 endmodule
